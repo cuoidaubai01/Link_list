@@ -1,192 +1,90 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include "define.h"
-#include "link_list.h"
-#include "main_func.h"
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<math.h>
+#include<stdint.h>
+#include<stdbool.h>
+#include "Check.h"
+#include "IntelHex.h"
 
 /*******************************************************************************
  * Definitions
- ******************************************************************************/
-
+ *******************************************************************************/
 
 /*******************************************************************************
  * Prototypes
- ******************************************************************************/
+ *******************************************************************************/
 
+/**
+ * @brief: Print the status of a line
+ * @param Buff: A character array that stores the data of a line
+ * @param check: Struct is used to check the error of a line in a hex file
+ * @param hexStruct: Struct data form of a line in hex file
+ * @return NULL;
+ */
+void printStateLine(uint8_t *Buff,Status_t check,HexFormData_t hexStruct);
 
 /*******************************************************************************
  * Variables
- ******************************************************************************/
-
+ *******************************************************************************/
 
 /*******************************************************************************
  * Code
- ******************************************************************************/
+ *******************************************************************************/
 
-int main()
+int main(int agrc, char *argv[])
 {
-/*define a node head*/
-    node head;
-    struct ListSV *b;
-/*initialization head node*/
-    init(&head);
-
-/*array buffer*/
-    char name[40];
-    char id[10];
-    char account[10];
-    float gpa;
-    char val_search[20];
-
-
-/*initialization variable */
-    int i;
-    uint32_t flag;
-    uint32_t pos;
-    uint8_t choose;
-
-/* Main program */
-
-    menu_Display();
-    do
+    FILE *fp;
+    Status_t check;
+    HexFormData_t hexStruct;
+    uint8_t BufferData[521];
+    fp = fopen(argv[1],"r+");
+    if(fp == NULL)
     {
-        printf("Please choose :\n");
-        while(scanf("%d", &choose) != 1)
+        printf("FAIL TO OPEN FILE\n");
+    }
+    else
+    {
+        while(fgets(BufferData,521,fp) != NULL)
         {
-            printf("Please choose number in the menu!\n");
-            fflush(stdin);
+           checkLine(BufferData,&check,&hexStruct);
+           printStateLine(BufferData,check,hexStruct);
+           if(hexStruct.recordType==1)
+           {
+               break;
+           }
         }
-        flag = 1;
-        fflush(stdin);
-        switch(choose)
+    }
+    return 0;
+    fclose(fp);
+}
+
+void printStateLine(uint8_t *Buff,Status_t check,HexFormData_t hexStruct)
+{
+    int i;
+
+    printf("\n%s",Buff);
+    if(check.stateHexLine == false)
+    {
+        printf("      --->> Incorrect!!");
+    }
+    else
+    {
+        if(hexStruct.recordType == 1)
         {
-            case 1:
-
-                /*check flag*/
-                while(flag != 0)
-                {
-                    printf("Enter Name -- ");
-                    fflush(stdin);
-                    gets(name);
-                    /*enter name and check name*/
-
-                    if(check_Name(head,name) == false)
-                    {
-                        flag = 0;
-                        break;
-                    }
-                    printf("Enter Id --");
-                    scanf("%s", &id);
-                    fflush(stdin);
-
-                    /*enter id and check id*/
-                    if(check_Id(head,id) == false)
-                    {
-                        flag = 0;
-                        break;
-                    }
-                    printf("Enter Account -- ");
-                    scanf("%s", &account);
-                    fflush(stdin);
-
-                    /*enter account and check account*/
-                    if(check_Account(head,account) == false)
-                    {
-                        flag = 0;
-                        break;
-                    }
-                    printf("Enter Medium score -- ");
-
-                    /*check input medium score if input type worng,user have to enter again*/
-                    while(scanf("%f",&gpa) != 1)
-                    {
-                        printf("Error in user input, gpa should be in numbers\n");
-                        printf("Please enter again Medium score!\n");
-                        fflush(stdin);
-                    }
-                    if(check_Gpaval(gpa) == false)
-                    {
-                        flag = 0;
-                        break;
-                    }
-
-                    /*create a node*/
-                    b = createNode(name,id,account,gpa);
-                    printf("\nChoose Position:\n");
-                    while(scanf("%d",&pos) != 1)
-                    {
-                        printf("Error value position,please enter number,again!\n");
-                        fflush(stdin);
-                    }
-                    add_Any(b,&head,pos);
-                    flag = 0;
-                }
-                break;
-            case 2:
-                /*check node head if not null return true and do function delete*/
-                if(check_Null(head) == true)
-                {
-                    printf("Please enter position want delete:\n");
-
-                    /*check input pos if input type worng,user have to enter again*/
-                    while(scanf("%d",&pos) != 1)
-                    {
-                        printf("Error in user input, position should be in numbers\n");
-                        fflush(stdin);
-                    }
-                    del_Pos(b,pos);
-                    printf("Delete success!\n");
-                }
-                break;
-            case 3:
-                /*check node head if not null return true and do function print*/
-                if(check_Null(head) == true)
-                {
-                    out_Put(head);
-                }
-                break;
-            case 4:
-                /*check node head if not null return true and do function search*/
-                if(check_Null(head) == true)
-                {
-                    printf("Please enter 'name' want to find!\n");
-
-                    /*check input val search if input type worng,user have to enter again*/
-                    while(scanf("%s",&val_search) != 1)
-                    {
-                        printf("Please enter character!\n");
-                        fflush(stdin);
-                    }
-                    searchname(head,val_search);
-                }
-                break;
-            case 5:
-                /*check node head if not null return true and do function sort by account*/
-                if(check_Null(head) == true)
-                {
-                    sort_Name(head);
-                    printf("List after sort by account is :\n");
-                    out_Put(head);
-                }
-                break;
-            case 6:
-                /*check node head if not null return true and do function sort by medium score*/
-                if(check_Null(head) == true)
-                {
-                    sort_Gpa(head);
-                    printf("List after sort by medium score is :\n");
-                    out_Put(head);
-                }
-                break;
-            case 7:
-                printf("Thank for use this program,good bye!\n");
-                break;
-            default:
-                printf("Worng choose!\n");
-                fflush(stdin);
-                break;
+            printf("-->> END OF FILE -- > DONE");
         }
-    }while(choose != 7);
+        else
+        {
+            printf("      --->> Correct!!");
+            printf("\n      ---------Result---------");
+            printf("\n      Record Type: 0X%.2X",hexStruct.recordType);
+            printf("\n      Data: ");
+            for(i = 0 ; i < hexStruct.byteCount ; i++)
+            {
+                printf("%.2X-",hexStruct.data[i]);
+            }
+            printf("\n      Address:0X%X",hexStruct.address);
+        }
+    }
 }
